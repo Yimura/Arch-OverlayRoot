@@ -1,0 +1,11 @@
+#!/bin/bash
+
+build() {
+    add_runscript
+}
+
+help() {
+    cat <<HELPEOF
+Sets up an overlay filesystem on rootfs unless 'nooverlayroot' is specified in the kernel command line.
+HELPEOF
+}
