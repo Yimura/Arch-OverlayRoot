@@ -1,0 +1,49 @@
+#!/usr/bin/ash
+
+run_hook() {
+  local enable
+  enable=$(grep -Eo 'overlayroot=[a-zA-Z]+' /proc/cmdline | cut -d= -f2)
+
+  if [ "$enable" == "enable" ]; then
+    # Create overlay tree in RAM
+    mkdir -p /overlay
+    mount -t tmpfs overlayroot /overlay
+    mkdir -p /overlay/upper
+    mkdir -p /overlay/work
+    mkdir -p /overlay/lower
+
+    # Remove /new_root directory and replace it with symlink
+    rmdir /new_root
+    # After run_hook, mount_handler will mount our rootfs into here /new_root
+    ln -s /overlay/lower /new_root
+  fi;
+}
+
+run_latehook() {
+  local enable
+  enable=$(grep -Eo 'overlayroot=[a-zA-Z]+' /proc/cmdline | cut -d= -f2)
+
+  if [ "$enable" == "enable" ]; then
+    # Remove /new_root symlink, rootfs is now mounted into /new_root, and replace it with empty directory
+    rm /new_root
+    mkdir -p /new_root
+
+    # Build overlay FS and mount it to /new_root
+    mount -t overlay overlay -o lowerdir=/overlay/lower,upperdir=/overlay/upper,workdir=/overlay/work /new_root
+
+    # Rebind /var so it's mounted from the lower filesystem
+    if [ -d /new_root/var ]; then
+        mount --bind /overlay/lower/var /new_root/var
+        mount -o remount,rw /new_root/var
+    else
+        echo "Warning: /new_root/var does not exist, creating it."
+        mkdir -p /new_root/var
+        mount --bind /overlay/lower/var /new_root/var
+        mount -o remount,rw /new_root/var
+    fi
+
+    # Link overlay mount into new_root, so we can work on it while the machine is running
+    mkdir -p /new_root/overlay
+    mount -n -o rbind /overlay /new_root/overlay
+  fi;
+}
