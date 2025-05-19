@@ -7,7 +7,7 @@ The `/var` directory is mounted `rw` from the lower filesystem because I'm mainl
 ## Installation
 
 1. Create hook and install scripts according to this repository's directory structure
-2. Update `MODULES` and HOOKS with `MODULES=(overlay ...)` and `HOOKS=(... overlayroot)`
+2. Update `MODULES` and HOOKS with `MODULES=(overlay ...)` and `HOOKS=(... overlayroot)` in `/etc/mkinitcpio.conf
 3. Run `mkinitcpio -P`
 4. Update kernel boot parameters to include `overlayroot=enable`
 5. Add a new boot entry that contains `overlayroot=disable` as a maintenance option to update the system and fix potential issues with the overlay.
